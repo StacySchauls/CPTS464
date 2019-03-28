@@ -1,0 +1,47 @@
+java -d64 -classpath ".:/home/stacy/rti_connext_dds-5.3.1/lib/java/nddsjava.jar" MsgSubscriber 
+Messaged Received  #0
+Sender: Stacy Schauls
+Message:Apple
+
+Messaged Received  #4
+Sender: Stacy Schauls
+Message:Banana
+
+Messaged Received  #8
+Sender: Stacy Schauls
+Message:Cherry
+
+Messaged Received  #2
+Sender: Stacy Schauls
+Message:Carrots
+
+Messaged Received  #6
+Sender: Stacy Schauls
+Message:Pear
+
+Messaged Received  #0
+Sender: Stacy Schauls
+Message:Apple
+
+Messaged Received  #4
+Sender: Stacy Schauls
+Message:Banana
+
+Messaged Received  #8
+Sender: Stacy Schauls
+Message:Cherry
+
+Messaged Received  #2
+Sender: Stacy Schauls
+Message:Carrots
+
+Messaged Received  #6
+Sender: Stacy Schauls
+Message:Pear
+
+Messaged Received  #0
+Sender: Stacy Schauls
+Message:Apple
+
+RTI Data Distribution Service Nonprofit License issued to Washington State University (WSU02-UP) ... For non-production use only.
+Expires on 30-jun-2019 See www.rti.com for more information.

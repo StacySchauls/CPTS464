@@ -1,0 +1,104 @@
+//////////////////////////////////
+SUBSRIBER OUTPUT (PUBLISHER BELOW)
+//////////////////////////////////
+
+java -d64 -classpath ".:/home/stacy/rti_connext_dds-5.3.1/lib/java/nddsjava.jar" MsgSubscriber 
+Messaged Received  #0
+Sender: Stacy Schauls
+Message:Apple
+
+Messaged Received  #4
+Sender: Stacy Schauls
+Message:Banana
+
+Messaged Received  #8
+Sender: Stacy Schauls
+Message:Cherry
+
+Messaged Received  #2
+Sender: Stacy Schauls
+Message:Carrots
+
+Messaged Received  #6
+Sender: Stacy Schauls
+Message:Pear
+
+Messaged Received  #0
+Sender: Stacy Schauls
+Message:Apple
+
+Messaged Received  #4
+Sender: Stacy Schauls
+Message:Banana
+
+Messaged Received  #8
+Sender: Stacy Schauls
+Message:Cherry
+
+Messaged Received  #2
+Sender: Stacy Schauls
+Message:Carrots
+
+Messaged Received  #6
+Sender: Stacy Schauls
+Message:Pear
+
+Messaged Received  #0
+Sender: Stacy Schauls
+Message:Apple
+
+RTI Data Distribution Service Nonprofit License issued to Washington State University (WSU02-UP) ... For non-production use only.
+Expires on 30-jun-2019 See www.rti.com for more information.
+
+///////////////////////
+PUBLISHER OUTPUT
+///////////////////////
+
+
+java -d64 -classpath ".:/home/stacy/rti_connext_dds-5.3.1/lib/java/nddsjava.jar" MsgPublisher 
+Writing Apple #0
+Writing Spinach #1
+Writing Carrots #2
+Writing Lentil #3
+Writing Banana #4
+Writing Potato #5
+Writing Pear #6
+Writing Avacado #7
+Writing Cherry #8
+Writing Orange #9
+Writing Apple #0
+Writing Spinach #1
+Writing Carrots #2
+Writing Lentil #3
+Writing Banana #4
+Writing Potato #5
+Writing Pear #6
+Writing Avacado #7
+Writing Cherry #8
+Writing Orange #9
+Writing Apple #0
+Writing Spinach #1
+Writing Carrots #2
+Writing Lentil #3
+Writing Banana #4
+Writing Potato #5
+Writing Pear #6
+Writing Avacado #7
+Writing Cherry #8
+Writing Orange #9
+Writing Apple #0
+Writing Spinach #1
+Writing Carrots #2
+Writing Lentil #3
+Writing Banana #4
+Writing Potato #5
+Writing Pear #6
+Writing Avacado #7
+Writing Cherry #8
+Writing Orange #9
+Writing Apple #0
+Writing Spinach #1
+Writing Carrots #2
+Writing Lentil #3
+RTI Data Distribution Service Nonprofit License issued to Washington State University (WSU02-UP) ... For non-production use only.
+Expires on 30-jun-2019 See www.rti.com for more information.
