@@ -50,6 +50,10 @@ java -Djava.ext.dirs=$NDDSHOME/lib/java AccidentPublisher <domain_id>
 java -Djava.ext.dirs=$NDDSHOME/lib/java AccidentSubscriber <domain_id>        
 */
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -59,15 +63,53 @@ import com.rti.dds.infrastructure.*;
 import com.rti.dds.publication.*;
 import com.rti.dds.topic.*;
 import com.rti.ndds.config.*;
-
+import java.util.Scanner;
 // ===========================================================================
 
 public class AccidentPublisher {
     // -----------------------------------------------------------------------
     // Public Methods
     // -----------------------------------------------------------------------
+	public static int numRoutes = 0;
+	public static int numVehicles = 0;
+	
+	public static void parsePub() throws IOException {
+		File file = new File("pub.properties");
+		Scanner scanner = new Scanner(file);
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		String st;
+		String pairs[];
+		// get num routes, num vehicle, num backup
+		//nt numRoutes = 0;
+		//int numVehicles = 0;
+		int numBackup = 0;
+		int count = 0;
+		
+		while((st=br.readLine()) != null) {
+			if(st.charAt(0) == '#') {
+				System.out.println("we should ignore this line : " + st);
+			}else {
+				pairs = st.split("=");
+				System.out.println(pairs[1]);
+				System.out.println(st);
+				if(count == 0) {
+					numRoutes = Integer.parseInt(pairs[1]);
+					
+				}else if(count == 1) {
+					numVehicles = Integer.parseInt(pairs[1]);				
+				}else if (count == 2) {
+					
+				}
+			}
+			count ++;
+			
+		}
+		System.out.println("Routes = " + numRoutes);
+		System.out.println("Vehicles = " + numVehicles);
+		
+	}
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // --- Get domain ID --- //
         int domainId = 0;
         if (args.length >= 1) {
@@ -87,6 +129,8 @@ public class AccidentPublisher {
         */
 
         // --- Run --- //
+        System.out.println("trying parse pub");
+        parsePub();
         publisherMain(domainId, sampleCount);
     }
 
@@ -108,7 +152,8 @@ public class AccidentPublisher {
         Publisher publisher = null;
         Topic topic = null;
         AccidentDataWriter writer = null;
-
+        Publisher vehicles[] = new Publisher[numVehicles];
+        
         try {
             // --- Create participant --- //
 
@@ -189,7 +234,7 @@ public class AccidentPublisher {
                 System.out.println("Writing Accident, count " + count);
 
                 /* Modify the instance to be written here */
-
+                
                 /* Write data */
                 writer.write(instance, instance_handle);
                 try {

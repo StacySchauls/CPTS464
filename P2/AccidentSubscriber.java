@@ -59,15 +59,18 @@ import com.rti.dds.infrastructure.*;
 import com.rti.dds.subscription.*;
 import com.rti.dds.topic.*;
 import com.rti.ndds.config.*;
-
+import java.io.*;
 // ===========================================================================
 
 public class AccidentSubscriber {
     // -----------------------------------------------------------------------
     // Public Methods
     // -----------------------------------------------------------------------
+	
 
-    public static void main(String[] args) {
+	
+	
+    public static void main(String[] args) throws IOException {
         // --- Get domain ID --- //
         int domainId = 0;
         if (args.length >= 1) {
@@ -87,7 +90,9 @@ public class AccidentSubscriber {
         */
 
         // --- Run --- //
-        subscriberMain(domainId, sampleCount);
+
+       // subscriberMain(domainId, sampleCount);
+        
     }
 
     // -----------------------------------------------------------------------
@@ -109,6 +114,8 @@ public class AccidentSubscriber {
         Topic topic = null;
         DataReaderListener listener = null;
         AccidentDataReader reader = null;
+        
+        
 
         try {
 
