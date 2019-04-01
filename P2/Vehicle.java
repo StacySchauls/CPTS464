@@ -6,4 +6,7 @@ public class Vehicle {
 	int NumTimesThruRoute;
 	Boolean light;
 	Boolean heavy;
+	int breakdownDelayTime;
+	String name;
+	int route;
 }

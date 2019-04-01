@@ -74,6 +74,7 @@ public class AccidentPublisher {
 	public static int numVehicles = 0;
 	
 	public static void parsePub() throws IOException {
+
 		File file = new File("pub.properties");
 		Scanner scanner = new Scanner(file);
 		BufferedReader br = new BufferedReader(new FileReader(file));
@@ -106,9 +107,28 @@ public class AccidentPublisher {
 		}
 		System.out.println("Routes = " + numRoutes);
 		System.out.println("Vehicles = " + numVehicles);
-		
 	}
 
+	public static Vehicle create_bus(int route, String name, int numThruRoute) {
+		Vehicle bus = new Vehicle();
+		bus.Accident = false;
+		bus.breakdownDelayTime = 10;
+		bus.route = route;
+		bus.name = name;
+		bus.NumTimesThruRoute = numThruRoute;
+		return bus;
+	}
+	
+	public static Route create_route(String name, int NumStops, int TimeBetween,int numVehicles) {
+		Route route = new Route();
+		route.name = name;
+		route.NumStops = NumStops;
+		route.TimeBetween = TimeBetween;
+		route.numVehicles = numVehicles;
+		return route;
+		
+	}
+	
     public static void main(String[] args) throws IOException {
         // --- Get domain ID --- //
         int domainId = 0;
@@ -219,6 +239,14 @@ public class AccidentPublisher {
 
             /* Create data sample for writing */
             Accident instance = new Accident();
+            
+            
+            
+            
+            
+            
+            
+            
 
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
