@@ -51,12 +51,20 @@ java -Djava.ext.dirs=$NDDSHOME/lib/java AccidentSubscriber <domain_id>
 */
 
 import java.io.BufferedReader;
+import java.util.Random;
+import java.sql.Timestamp;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.time.LocalDateTime;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Random;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
@@ -72,6 +80,11 @@ public class AccidentPublisher {
     // -----------------------------------------------------------------------
 	public static int numRoutes = 0;
 	public static int numVehicles = 0;
+	public static Vehicle busses[];
+	public static final int HEAVY = 0;
+	public static final int LIGHT = 1;
+	public static final int NORMAL = 2;
+
 	
 	public static void parsePub() throws IOException {
 
@@ -109,7 +122,7 @@ public class AccidentPublisher {
 		System.out.println("Vehicles = " + numVehicles);
 	}
 
-	public static Vehicle create_bus(int route, String name, int numThruRoute) {
+	public static Vehicle create_bus(String route, String name, int numThruRoute) {
 		Vehicle bus = new Vehicle();
 		bus.Accident = false;
 		bus.breakdownDelayTime = 10;
@@ -126,6 +139,101 @@ public class AccidentPublisher {
 		route.TimeBetween = TimeBetween;
 		route.numVehicles = numVehicles;
 		return route;
+		
+	}
+	
+	public static Boolean hasAccident() {
+		Random rand = new Random();
+		//10 % accident rate
+		if(rand.nextInt(10) == 1) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static int traffic() {
+		Random rand = new Random();
+		int num = rand.nextInt(100);
+		// 25% light
+		if(num < 25) {
+			return LIGHT;
+		}else if( num < 35 ){ // 10% heavy
+			return HEAVY;
+		}
+		//last 65%
+		return NORMAL;
+	}
+	
+	public static int fill_in_ratio_generator() {
+		Random rand = new Random();
+		//number between 0 and 100
+		return rand.nextInt(101);
+	}
+	
+	
+	public static Position reached_stop(Vehicle bus, int stopNum) {
+		/* 1. Detect Accident
+		 * 2. Detect Heavy (10%) or light (25%) or normal (65%) traffic
+		 * 3. Get Fill in Ratio for bus -> random number between 0 and 100 inclusive
+		 */
+		
+		//Need to publish position
+		//Timestamp time = new Timestamp(System.currentTimeMillis());
+		LocalDateTime now = LocalDateTime.now();
+		
+		int hour = now.getHour();
+		int min = now.getMinute();
+		int sec = now.getSecond();
+		
+		Format formatter = new SimpleDateFormat("HH.mm.ss");
+		String TimeStamp = formatter.format(new Date());
+		
+		
+		//String TimeStamp = "";
+		
+		//long new_time = time.getTime();
+		Position pos = new Position();
+		
+		
+		Boolean Acc = hasAccident();
+		
+		//traffic type
+		int traffic_type = traffic();
+		if(traffic_type == HEAVY) {
+			bus.heavy = true;
+			bus.light = false;
+			bus.normal = false;
+			pos.trafficConditions = "Heavy";
+			}
+		if(traffic_type == LIGHT) {
+			bus.light = true;
+			bus.heavy = false;
+			bus.normal = false;
+			pos.trafficConditions = "Light";
+		}
+		else {
+			bus.normal = true;
+			bus.heavy = false;
+			bus.light = false;
+			pos.trafficConditions = "Normal";
+		}
+		
+		//fill in ratio
+		bus.VFR = fill_in_ratio_generator();
+		
+		
+		
+		pos.fillInRatio = bus.VFR;
+		pos.stopNumber = stopNum;
+		pos.route = bus.route;
+		pos.timeBetweenStops = bus.TimeBewteen;
+		pos.timestamp = TimeStamp;
+		pos.vehicle = bus.name;
+		pos.numStops = bus.numStops;
+		
+		return pos;
+		
+		
 		
 	}
 	
