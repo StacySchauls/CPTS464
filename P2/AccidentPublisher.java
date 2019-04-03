@@ -74,7 +74,7 @@ import com.rti.ndds.config.*;
 import java.util.Scanner;
 // ===========================================================================
 
-public class AccidentPublisher {
+public class AccidentPublisher implements Runnable{
     // -----------------------------------------------------------------------
     // Public Methods
     // -----------------------------------------------------------------------
@@ -84,6 +84,8 @@ public class AccidentPublisher {
 	public static final int HEAVY = 0;
 	public static final int LIGHT = 1;
 	public static final int NORMAL = 2;
+	private int domainID;
+	private int sampleCount;
 
 	
 	public static void parsePub() throws IOException {
@@ -258,8 +260,11 @@ public class AccidentPublisher {
 
         // --- Run --- //
         System.out.println("trying parse pub");
-        parsePub();
-        publisherMain(domainId, sampleCount);
+        System.out.println("Creating new thread 1");
+        new Thread(new AccidentPublisher(1,2)).start();
+        new Thread(new AccidentPublisher(2,2)).start();
+        //parsePub();
+        
     }
 
     // -----------------------------------------------------------------------
@@ -268,8 +273,12 @@ public class AccidentPublisher {
 
     // --- Constructors: -----------------------------------------------------
 
-    private AccidentPublisher() {
-        super();
+    private AccidentPublisher(int domainId, int SampleCount) {
+    	super();
+    	this.domainID = domainId;
+    	this.sampleCount = SampleCount;
+        
+
     }
 
     // -----------------------------------------------------------------------
@@ -355,6 +364,8 @@ public class AccidentPublisher {
             
             
             
+            
+            
 
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
@@ -370,6 +381,11 @@ public class AccidentPublisher {
                 System.out.println("Writing Accident, count " + count);
 
                 /* Modify the instance to be written here */
+                int i = 0;
+                while(i < 4) {
+                System.out.println("Sending message " + i+ " from domainID " + domainId);
+                i++;
+                }
                 
                 /* Write data */
                 writer.write(instance, instance_handle);
@@ -401,5 +417,11 @@ public class AccidentPublisher {
             //DomainParticipantFactory.finalize_instance();
         }
     }
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		publisherMain(this.domainID, this.sampleCount);
+	}
 }
 
