@@ -1,7 +1,3 @@
-import java.util.Random;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class Vehicle {
 	int VFR;
@@ -16,6 +12,7 @@ public class Vehicle {
 	String name;
 	String route;
 	int numStops;
+	int stopCount;
 	//Timestamp 
 	
 }

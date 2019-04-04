@@ -62,11 +62,12 @@ import com.rti.ndds.config.*;
 import java.io.*;
 // ===========================================================================
 
-public class AccidentSubscriber {
+public class AccidentSubscriber implements Runnable{
     // -----------------------------------------------------------------------
     // Public Methods
     // -----------------------------------------------------------------------
-	
+	private int domainID;
+	private int sampleCount;
 
 	
 	
@@ -90,7 +91,8 @@ public class AccidentSubscriber {
         */
 
         // --- Run --- //
-
+        new Thread(new AccidentSubscriber(1,0)).start();
+        new Thread(new AccidentSubscriber(2,0)).start();
        // subscriberMain(domainId, sampleCount);
         
     }
@@ -101,8 +103,10 @@ public class AccidentSubscriber {
 
     // --- Constructors: -----------------------------------------------------
 
-    private AccidentSubscriber() {
+    private AccidentSubscriber(int domainId, int SampleCount) {
         super();
+        this.domainID = domainId;
+        this.sampleCount = SampleCount;
     }
 
     // -----------------------------------------------------------------------
@@ -157,7 +161,7 @@ public class AccidentSubscriber {
             the configuration file USER_QOS_PROFILES.xml */
 
             topic = participant.create_topic(
-                "Example Accident",
+                Integer.toString(domainId),
                 typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
             if (topic == null) {
@@ -183,7 +187,7 @@ public class AccidentSubscriber {
 
             // --- Wait for data --- //
 
-            final long receivePeriodSec = 4;
+            final long receivePeriodSec = 1;
 
             for (int count = 0;
             (sampleCount == 0) || (count < sampleCount);
@@ -244,6 +248,7 @@ public class AccidentSubscriber {
                     SampleInfo info = (SampleInfo)_infoSeq.get(i);
 
                     if (info.valid_data) {
+                    	
                         System.out.println(
                             ((Accident)_dataSeq.get(i)).toString("Received",0));
 
@@ -256,5 +261,11 @@ public class AccidentSubscriber {
             }
         }
     }
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		subscriberMain(this.domainID, this.sampleCount);
+	}
 }
 

@@ -81,12 +81,17 @@ public class AccidentPublisher implements Runnable{
 	public static int numRoutes = 0;
 	public static int numVehicles = 0;
 	public static Vehicle busses[];
+	public static Route routes[];
 	public static final int HEAVY = 0;
 	public static final int LIGHT = 1;
 	public static final int NORMAL = 2;
-	private int domainID;
-	private int sampleCount;
-
+	private int domain;
+	private int count;
+	private String myRoute;
+	private String myBusName;
+	private int myNumStops;
+	private int myTimeBetween;
+	private Vehicle myBus;
 	
 	public static void parsePub() throws IOException {
 
@@ -124,13 +129,54 @@ public class AccidentPublisher implements Runnable{
 		System.out.println("Vehicles = " + numVehicles);
 	}
 
-	public static Vehicle create_bus(String route, String name, int numThruRoute) {
+	public static void pubLauncher() {
+		//should parse pub here. get all the info we need. For now im going to use hard coded stuff
+		numVehicles = 2;
+		numRoutes = 2;
+		//not sure if i need these two arrays or not
+		busses = new Vehicle[numVehicles * numRoutes];
+		routes = new Route[numRoutes];
+		
+		routes[0] = create_route("Express1",4,2,numVehicles);
+		routes[1] = create_route("Express2",6,3, numVehicles);
+		
+		//create the vehicles. Need to know which vehicles go with which route. maybe use the name? idk
+		Vehicle bus11 = create_bus(routes[0], "bus11", 4);
+		Vehicle bus12 = create_bus(routes[0], "bus12", 4);
+
+		
+		Vehicle bus21 = create_bus(routes[1], "bus21", 2);
+		Vehicle bus22 = create_bus(routes[1], "bus22", 2);
+
+		//add the busses to the bus array
+		busses[0] = bus11;
+		busses[1] = bus12;
+		busses[2] = bus21;
+		busses[3] = bus22;
+
+		Thread threads[] = new Thread[numVehicles * numRoutes];
+		//for each vehicle on each route, start a pub thread
+		int i;
+		for(i = 0; i<numVehicles * numRoutes; i++) {
+			System.out.println("Creating thread "+ i);
+			threads[i] = new Thread(new AccidentPublisher(i,0,busses[i]));
+		}
+		
+		for(i = 0; i<numVehicles * numRoutes; i++) {
+			System.out.println("Starting thread " + i);
+			threads[i].start();
+		}
+		
+	}
+	public static Vehicle create_bus(Route route, String name, int numThruRoute) {
 		Vehicle bus = new Vehicle();
 		bus.Accident = false;
 		bus.breakdownDelayTime = 10;
-		bus.route = route;
+		bus.route = route.name;
 		bus.name = name;
 		bus.NumTimesThruRoute = numThruRoute;
+		bus.TimeBewteen = route.TimeBetween;
+		bus.stopCount = 0;
 		return bus;
 	}
 	
@@ -201,23 +247,27 @@ public class AccidentPublisher implements Runnable{
 		
 		//traffic type
 		int traffic_type = traffic();
+	
 		if(traffic_type == HEAVY) {
 			bus.heavy = true;
 			bus.light = false;
 			bus.normal = false;
 			pos.trafficConditions = "Heavy";
+			//System.out.println("Heavy");
 			}
 		if(traffic_type == LIGHT) {
 			bus.light = true;
 			bus.heavy = false;
 			bus.normal = false;
 			pos.trafficConditions = "Light";
+			//System.out.println("Light");
 		}
 		else {
 			bus.normal = true;
 			bus.heavy = false;
 			bus.light = false;
 			pos.trafficConditions = "Normal";
+			//System.out.println("Normal");
 		}
 		
 		//fill in ratio
@@ -237,6 +287,14 @@ public class AccidentPublisher implements Runnable{
 		
 		
 		
+	}
+	
+	public static void displayPos(Position pos, Vehicle bus) {
+		System.out.println("Bus "+bus.name+" Has published position at stop "+bus.stopCount+ "at time "+pos.timestamp+". Traffic conditions are "+
+				pos.trafficConditions+"\nThe bus has a Fill-In-Ratio of "+bus.VFR);
+		/*System.out.println(pos.timestamp);
+		System.out.println("Fill in ratio: "+pos.fillInRatio);
+		System.out.println("Traffic: "+pos.trafficConditions);*/
 	}
 	
     public static void main(String[] args) throws IOException {
@@ -261,8 +319,10 @@ public class AccidentPublisher implements Runnable{
         // --- Run --- //
         System.out.println("trying parse pub");
         System.out.println("Creating new thread 1");
-        new Thread(new AccidentPublisher(1,2)).start();
-        new Thread(new AccidentPublisher(2,2)).start();
+        pubLauncher();
+        /* FOR TESTING */
+        //create two busses
+        
         //parsePub();
         
     }
@@ -273,17 +333,23 @@ public class AccidentPublisher implements Runnable{
 
     // --- Constructors: -----------------------------------------------------
 
-    private AccidentPublisher(int domainId, int SampleCount) {
+    private AccidentPublisher(int domain, int count, Vehicle bus) {
     	super();
-    	this.domainID = domainId;
-    	this.sampleCount = SampleCount;
-        
-
+    	this.domain = domain;
+    	this.count = count;
+    	//this.myBusName = bus.name;
+    	this.myNumStops = bus.numStops;
+    	this.myRoute = bus.route;
+    	this.myTimeBetween = bus.TimeBewteen;
+    	//this.myBus.stopCount = bus.stopCount;
+    	this.myBus = bus;
+    	System.out.println("my name is "+this.myBus.name);
+    	
     }
 
     // -----------------------------------------------------------------------
 
-    private static void publisherMain(int domainId, int sampleCount) {
+    private static void publisherMain(int domainId, int sampleCount,Vehicle bus) {
 
         DomainParticipant participant = null;
         Publisher publisher = null;
@@ -330,7 +396,7 @@ public class AccidentPublisher implements Runnable{
             the configuration file USER_QOS_PROFILES.xml */
 
             topic = participant.create_topic(
-                "Example Accident",
+                bus.name,
                 typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
             if (topic == null) {
@@ -365,7 +431,7 @@ public class AccidentPublisher implements Runnable{
             
             
             
-            
+            instance.route = Integer.toString(domainId);
 
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
@@ -373,19 +439,26 @@ public class AccidentPublisher implements Runnable{
             and register the keyed instance prior to writing */
             //instance_handle = writer.register_instance(instance);
 
-            final long sendPeriodMillis = 4 * 1000; // 4 seconds
-
-            for (int count = 0;
-            (sampleCount == 0) || (count < sampleCount);
-            ++count) {
-                System.out.println("Writing Accident, count " + count);
+            final long sendPeriodMillis = 0; // 4 seconds
+            long start = System.nanoTime();
+            for (int count = 0;(sampleCount == 0) || (count < sampleCount) || (bus.stopCount == bus.NumTimesThruRoute);
+            ++count ) {
+                
 
                 /* Modify the instance to be written here */
-                int i = 0;
-                while(i < 4) {
-                System.out.println("Sending message " + i+ " from domainID " + domainId);
-                i++;
-                }
+            	
+            	//TIMING
+            	long now = System.nanoTime();
+            	//System.out.println((double)(start - now) /1000000000.0);
+            	if( (double)(now - start) /1000000000.0 >= bus.TimeBewteen ) {
+            		 System.out.println("This is bus " + bus.name +" on route " + bus.route + " stop count is "+bus.stopCount);
+            		 bus.stopCount++;
+            		 start = System.nanoTime();
+            		 Position pos = reached_stop(bus, bus.stopCount);
+            		 displayPos(pos, bus);
+            	}
+               
+
                 
                 /* Write data */
                 writer.write(instance, instance_handle);
@@ -421,7 +494,7 @@ public class AccidentPublisher implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		publisherMain(this.domainID, this.sampleCount);
+		publisherMain(this.domain, this.count, this.myBus);
 	}
 }
 
