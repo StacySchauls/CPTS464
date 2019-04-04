@@ -136,7 +136,7 @@ public class AccidentPublisher implements Runnable{
 		//not sure if i need these two arrays or not
 		busses = new Vehicle[numVehicles * numRoutes];
 		routes = new Route[numRoutes];
-		
+		//routes = new Route[1];
 		routes[0] = create_route("Express1",4,2,numVehicles);
 		routes[1] = create_route("Express2",6,3, numVehicles);
 		
@@ -147,7 +147,7 @@ public class AccidentPublisher implements Runnable{
 		
 		Vehicle bus21 = create_bus(routes[1], "bus21", 2);
 		Vehicle bus22 = create_bus(routes[1], "bus22", 2);
-
+		
 		//add the busses to the bus array
 		busses[0] = bus11;
 		busses[1] = bus12;
@@ -177,6 +177,7 @@ public class AccidentPublisher implements Runnable{
 		bus.NumTimesThruRoute = numThruRoute;
 		bus.TimeBewteen = route.TimeBetween;
 		bus.stopCount = 0;
+		bus.timesAlreadyThru = 0;
 		return bus;
 	}
 	
@@ -291,7 +292,7 @@ public class AccidentPublisher implements Runnable{
 	
 	public static void displayPos(Position pos, Vehicle bus) {
 		System.out.println("Bus "+bus.name+" Has published position at stop "+bus.stopCount+ "at time "+pos.timestamp+". Traffic conditions are "+
-				pos.trafficConditions+"\nThe bus has a Fill-In-Ratio of "+bus.VFR);
+				pos.trafficConditions+"\nThe bus has a Fill-In-Ratio of "+bus.VFR );
 		/*System.out.println(pos.timestamp);
 		System.out.println("Fill in ratio: "+pos.fillInRatio);
 		System.out.println("Traffic: "+pos.trafficConditions);*/
@@ -441,8 +442,25 @@ public class AccidentPublisher implements Runnable{
 
             final long sendPeriodMillis = 0; // 4 seconds
             long start = System.nanoTime();
-            for (int count = 0;(sampleCount == 0) || (count < sampleCount) || (bus.stopCount == bus.NumTimesThruRoute);
-            ++count ) {
+            
+            /* TODO: FIX THE BREAK OUT OF THIS FOR LOOP FR THE BUS STOP COUNT AND SHIT */
+            for (int count = 0;(sampleCount == 0) || (count < sampleCount); ++count ) {
+            	
+            	//Check for accident
+            
+            	
+            	//checks the count to know when to break out of the loop
+            	if(bus.stopCount == bus.NumTimesThruRoute) {
+            		System.out.println("Bus "+bus.name+" has reached the end of the route.");
+            		if(bus.timesAlreadyThru == 3) {
+            			System.out.println("Bus "+bus.name+" has gone through 3 times. breaking.");
+            			break;
+            		}
+            		bus.timesAlreadyThru++;
+            		bus.stopCount = 0;
+            	}
+            		
+                
                 
 
                 /* Modify the instance to be written here */
@@ -454,6 +472,11 @@ public class AccidentPublisher implements Runnable{
             		 System.out.println("This is bus " + bus.name +" on route " + bus.route + " stop count is "+bus.stopCount);
             		 bus.stopCount++;
             		 start = System.nanoTime();
+            		 
+            		if(hasAccident()) {
+                    	System.out.println("Bus "+bus.name+" has had an accident!\n");
+                    	bus.TimeBewteen += 10;
+                    }
             		 Position pos = reached_stop(bus, bus.stopCount);
             		 displayPos(pos, bus);
             	}

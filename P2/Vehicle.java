@@ -13,6 +13,7 @@ public class Vehicle {
 	String route;
 	int numStops;
 	int stopCount;
+	int timesAlreadyThru;
 	//Timestamp 
 	
 }
