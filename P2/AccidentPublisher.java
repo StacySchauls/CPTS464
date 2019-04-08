@@ -142,27 +142,27 @@ public class AccidentPublisher implements Runnable{
 		
 		//create the vehicles. Need to know which vehicles go with which route. maybe use the name? idk
 		Vehicle bus11 = create_bus(routes[0], "bus11", 4);
-		Vehicle bus12 = create_bus(routes[0], "bus12", 4);
+		//Vehicle bus12 = create_bus(routes[0], "bus12", 4);
 
 		
-		Vehicle bus21 = create_bus(routes[1], "bus21", 2);
-		Vehicle bus22 = create_bus(routes[1], "bus22", 2);
+		//Vehicle bus21 = create_bus(routes[1], "bus21", 2);
+		//Vehicle bus22 = create_bus(routes[1], "bus22", 2);
 		
 		//add the busses to the bus array
 		busses[0] = bus11;
-		busses[1] = bus12;
-		busses[2] = bus21;
-		busses[3] = bus22;
+		//busses[1] = bus12;
+		//busses[2] = bus21;
+		//busses[3] = bus22;
 
 		Thread threads[] = new Thread[numVehicles * numRoutes];
 		//for each vehicle on each route, start a pub thread
 		int i;
-		for(i = 0; i<numVehicles * numRoutes; i++) {
+		for(i = 0; i<1; i++) {
 			System.out.println("Creating thread "+ i);
 			threads[i] = new Thread(new AccidentPublisher(i,0,busses[i]));
 		}
 		
-		for(i = 0; i<numVehicles * numRoutes; i++) {
+		for(i = 0; i<1; i++) {
 			System.out.println("Starting thread " + i);
 			threads[i].start();
 		}
@@ -395,7 +395,7 @@ public class AccidentPublisher implements Runnable{
 
             /* To customize topic QoS, use
             the configuration file USER_QOS_PROFILES.xml */
-
+            System.out.println("topic is " + bus.name);
             topic = participant.create_topic(
                 bus.name,
                 typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
@@ -432,7 +432,7 @@ public class AccidentPublisher implements Runnable{
             
             
             
-            instance.route = Integer.toString(domainId);
+            
 
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
@@ -451,6 +451,7 @@ public class AccidentPublisher implements Runnable{
             	
             	//checks the count to know when to break out of the loop
             	if(bus.stopCount == bus.NumTimesThruRoute) {
+            		
             		System.out.println("Bus "+bus.name+" has reached the end of the route.");
             		if(bus.timesAlreadyThru == 3) {
             			System.out.println("Bus "+bus.name+" has gone through 3 times. breaking.");
@@ -470,6 +471,9 @@ public class AccidentPublisher implements Runnable{
             	//System.out.println((double)(start - now) /1000000000.0);
             	if( (double)(now - start) /1000000000.0 >= bus.TimeBewteen ) {
             		 System.out.println("This is bus " + bus.name +" on route " + bus.route + " stop count is "+bus.stopCount);
+                 	instance.route = bus.route;
+             		instance.vehicle = bus.name;
+             		instance.stopNumber = bus.stopCount;
             		 bus.stopCount++;
             		 start = System.nanoTime();
             		 
@@ -479,12 +483,16 @@ public class AccidentPublisher implements Runnable{
                     }
             		 Position pos = reached_stop(bus, bus.stopCount);
             		 displayPos(pos, bus);
+            		 writer.write(instance, instance_handle);
             	}
                
 
                 
                 /* Write data */
-                writer.write(instance, instance_handle);
+
+                
+                
+                
                 try {
                     Thread.sleep(sendPeriodMillis);
                 } catch (InterruptedException ix) {

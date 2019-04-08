@@ -53,6 +53,7 @@ java -Djava.ext.dirs=$NDDSHOME/class AccidentSubscriber <domain_id>
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Scanner;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
@@ -68,9 +69,82 @@ public class AccidentSubscriber implements Runnable{
     // -----------------------------------------------------------------------
 	private int domainID;
 	private int sampleCount;
+	private String busName;
+	public static int numRoutes;
+	public static int numVehicles;
+	public static Passenger pasengers[];
+ 	public static void parsePub() throws IOException {
 
+
+		File file = new File("pub.properties");
+		Scanner scanner = new Scanner(file);
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		String st;
+		String pairs[];
+		// get num routes, num vehicle, num backup
+		//nt numRoutes = 0;
+		//int numVehicles = 0;
+		int numBackup = 0;
+		int count = 0;
+		
+		while((st=br.readLine()) != null) {
+			if(st.charAt(0) == '#') {
+				System.out.println("we should ignore this line : " + st);
+			}else {
+				pairs = st.split("=");
+				System.out.println(pairs[1]);
+				System.out.println(st);
+				if(count == 0) {
+					numRoutes = Integer.parseInt(pairs[1]);
+					
+				}else if(count == 1) {
+					numVehicles = Integer.parseInt(pairs[1]);				
+				}else if (count == 2) {
+					
+				}
+			}
+			count ++;
+			
+		}
+		System.out.println("Routes = " + numRoutes);
+		System.out.println("Vehicles = " + numVehicles);
+	}
 	
-	
+ 	
+ 	public static Passenger create_pass(int num) {
+ 	
+ 		Passenger pass = new Passenger();
+ 		
+ 		//diff for passenger 1 and 2
+ 		if(num == 1) {
+ 			pass.currentRoute = 1;
+ 			pass.currentStop = 2;
+ 			pass.destination = 4;
+ 			pass.subRoute = 1;
+ 			pass.subStopNum = 2;
+ 			
+ 		}else if(num == 2) {
+ 			pass.currentRoute = 2;
+ 			pass.currentStop = 3;
+ 			pass.destination = 2;
+ 			pass.subRoute = 2;
+ 			pass.subStopNum = 3;
+ 		}else {
+ 			System.out.println("Error. Invalid passenger number");
+ 			return null;
+ 		}
+ 		
+ 		return pass;
+ 	}
+	public static Operator create_op() {
+		Operator op = new Operator();
+		return op;
+	}
+ 	public static void setup() {
+		Passenger pass1 = create_pass(1);
+		Passenger pass2 = create_pass(2);
+		Operator op = create_op();
+	}
     public static void main(String[] args) throws IOException {
         // --- Get domain ID --- //
         int domainId = 0;
@@ -91,8 +165,8 @@ public class AccidentSubscriber implements Runnable{
         */
 
         // --- Run --- //
-        new Thread(new AccidentSubscriber(1,0)).start();
-        new Thread(new AccidentSubscriber(2,0)).start();
+        new Thread(new AccidentSubscriber(0,0, "bus11")).start();
+        new Thread(new AccidentSubscriber(1,0, "bus12")).start();
        // subscriberMain(domainId, sampleCount);
         
     }
@@ -103,15 +177,16 @@ public class AccidentSubscriber implements Runnable{
 
     // --- Constructors: -----------------------------------------------------
 
-    private AccidentSubscriber(int domainId, int SampleCount) {
+    private AccidentSubscriber(int domainId, int SampleCount, String busName) {
         super();
         this.domainID = domainId;
         this.sampleCount = SampleCount;
+        this.busName = busName;
     }
 
     // -----------------------------------------------------------------------
 
-    private static void subscriberMain(int domainId, int sampleCount) {
+    private static void subscriberMain(int domainId, int sampleCount, String busName) {
 
         DomainParticipant participant = null;
         Subscriber subscriber = null;
@@ -159,9 +234,9 @@ public class AccidentSubscriber implements Runnable{
 
             /* To customize topic QoS, use
             the configuration file USER_QOS_PROFILES.xml */
-
+            System.out.println("Subbing to topic " + busName);
             topic = participant.create_topic(
-                Integer.toString(domainId),
+                busName,
                 typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
             if (topic == null) {
@@ -192,8 +267,8 @@ public class AccidentSubscriber implements Runnable{
             for (int count = 0;
             (sampleCount == 0) || (count < sampleCount);
             ++count) {
-                System.out.println("Accident subscriber sleeping for "
-                + receivePeriodSec + " sec...");
+             //   System.out.println("Accident subscriber sleeping for "
+              //  + receivePeriodSec + " sec...");
 
                 try {
                     Thread.sleep(receivePeriodSec * 1000);  // in millisec
@@ -248,9 +323,8 @@ public class AccidentSubscriber implements Runnable{
                     SampleInfo info = (SampleInfo)_infoSeq.get(i);
 
                     if (info.valid_data) {
-                    	
-                        System.out.println(
-                            ((Accident)_dataSeq.get(i)).toString("Received",0));
+                    	System.out.println("here");
+                        System.out.println("Messaged Received "+_dataSeq.get(i));
 
                     }
                 }
@@ -265,7 +339,7 @@ public class AccidentSubscriber implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		subscriberMain(this.domainID, this.sampleCount);
+		subscriberMain(this.domainID, this.sampleCount, this.busName);
 	}
 }
 
