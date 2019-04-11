@@ -140,7 +140,7 @@ public class AccidentPublisher implements Runnable{
 				
 				if(matcher.find()) {
 					System.out.println("Adding new route "+value.split("#")[0]);
-					routes.add(new Route(value));
+					routes.add(new Route(value.split("#")[0]));
 					
 					continue;
 				}

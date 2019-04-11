@@ -1,5 +1,4 @@
 
-
 /* AccidentSubscriber.java
 
 A publication of data of type Accident
@@ -52,6 +51,7 @@ java -Djava.ext.dirs=$NDDSHOME/class AccidentSubscriber <domain_id>
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.MessageFormat;
 import java.util.Arrays;
 
 import com.rti.dds.domain.*;
@@ -63,191 +63,240 @@ import com.rti.ndds.config.*;
 // ===========================================================================
 
 public class AccidentSubscriber {
-    // -----------------------------------------------------------------------
-    // Public Methods
-    // -----------------------------------------------------------------------
+	// -----------------------------------------------------------------------
+	// Public Methods
+	// -----------------------------------------------------------------------
 
-    public static void main(String[] args) {
-        // --- Get domain ID --- //
-        int domainId = 0;
-        if (args.length >= 1) {
-            domainId = Integer.valueOf(args[0]).intValue();
-        }
+	public static void main(String[] args) {
+		// --- Get domain ID --- //
+		int domainId = 0;
+		if (args.length >= 1) {
+			domainId = Integer.valueOf(args[0]).intValue();
+		}
 
-        // -- Get max loop count; 0 means infinite loop --- //
-        int sampleCount = 0;
-        if (args.length >= 2) {
-            sampleCount = Integer.valueOf(args[1]).intValue();
-        }
+		// -- Get max loop count; 0 means infinite loop --- //
+		int sampleCount = 0;
+		if (args.length >= 2) {
+			sampleCount = Integer.valueOf(args[1]).intValue();
+		}
 
-        /* Uncomment this to turn on additional logging
-        Logger.get_instance().set_verbosity_by_category(
-            LogCategory.NDDS_CONFIG_LOG_CATEGORY_API,
-            LogVerbosity.NDDS_CONFIG_LOG_VERBOSITY_STATUS_ALL);
-        */
+		/*
+		 * Uncomment this to turn on additional logging
+		 * Logger.get_instance().set_verbosity_by_category(
+		 * LogCategory.NDDS_CONFIG_LOG_CATEGORY_API,
+		 * LogVerbosity.NDDS_CONFIG_LOG_VERBOSITY_STATUS_ALL);
+		 */
 
-        // --- Run --- //
-        subscriberMain(domainId, sampleCount);
-    }
+		// --- Run --- //
+		subscriberMain(domainId, sampleCount);
+	}
 
-    // -----------------------------------------------------------------------
-    // Private Methods
-    // -----------------------------------------------------------------------
+	// -----------------------------------------------------------------------
+	// Private Methods
+	// -----------------------------------------------------------------------
 
-    // --- Constructors: -----------------------------------------------------
+	// --- Constructors: -----------------------------------------------------
 
-    private AccidentSubscriber() {
-        super();
-    }
+	private AccidentSubscriber() {
+		super();
+	}
 
-    // -----------------------------------------------------------------------
+	// -----------------------------------------------------------------------
 
-    private static void subscriberMain(int domainId, int sampleCount) {
+	private static void subscriberMain(int domainId, int sampleCount) {
 
-        DomainParticipant participant = null;
-        Subscriber subscriber = null;
-        Topic topic = null;
-        DataReaderListener listener = null;
-        AccidentDataReader reader = null;
+		DomainParticipant participant = null;
+		Subscriber subscriber = null;
+		Topic topic = null;
+		Topic topic1 = null;
+		DataReaderListener listener = null;
+		AccidentDataReader reader = null;
+		PositionDataReader reader1 = null;
 
-        try {
+		try {
 
-            // --- Create participant --- //
+			// --- Create participant --- //
 
-            /* To customize participant QoS, use
-            the configuration file
-            USER_QOS_PROFILES.xml */
+			/*
+			 * To customize participant QoS, use the configuration file
+			 * USER_QOS_PROFILES.xml
+			 */
 
-            participant = DomainParticipantFactory.TheParticipantFactory.
-            create_participant(
-                domainId, DomainParticipantFactory.PARTICIPANT_QOS_DEFAULT,
-                null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (participant == null) {
-                System.err.println("create_participant error\n");
-                return;
-            }                         
+			participant = DomainParticipantFactory.TheParticipantFactory.create_participant(domainId,
+					DomainParticipantFactory.PARTICIPANT_QOS_DEFAULT, null /* listener */, StatusKind.STATUS_MASK_NONE);
+			if (participant == null) {
+				System.err.println("create_participant error\n");
+				return;
+			}
 
-            // --- Create subscriber --- //
+			// --- Create subscriber --- //
 
-            /* To customize subscriber QoS, use
-            the configuration file USER_QOS_PROFILES.xml */
+			/*
+			 * To customize subscriber QoS, use the configuration file USER_QOS_PROFILES.xml
+			 */
 
-            subscriber = participant.create_subscriber(
-                DomainParticipant.SUBSCRIBER_QOS_DEFAULT, null /* listener */,
-                StatusKind.STATUS_MASK_NONE);
-            if (subscriber == null) {
-                System.err.println("create_subscriber error\n");
-                return;
-            }     
+			subscriber = participant.create_subscriber(DomainParticipant.SUBSCRIBER_QOS_DEFAULT, null /* listener */,
+					StatusKind.STATUS_MASK_NONE);
+			if (subscriber == null) {
+				System.err.println("create_subscriber error\n");
+				return;
+			}
 
-            // --- Create topic --- //
+			// --- Create topic --- //
 
-            /* Register type before creating topic */
-            String typeName = AccidentTypeSupport.get_type_name(); 
-            AccidentTypeSupport.register_type(participant, typeName);
+			/* Register type before creating topic */
+			String typeName = AccidentTypeSupport.get_type_name();
+			AccidentTypeSupport.register_type(participant, typeName);
 
-            /* To customize topic QoS, use
-            the configuration file USER_QOS_PROFILES.xml */
+			String typeName1 = PositionTypeSupport.get_type_name();
+			PositionTypeSupport.register_type(participant, typeName1);
 
-            topic = participant.create_topic(
-                "Example Accident",
-                typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
-                null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (topic == null) {
-                System.err.println("create_topic error\n");
-                return;
-            }                     
+			/*
+			 * To customize topic QoS, use the configuration file USER_QOS_PROFILES.xml
+			 */
 
-            // --- Create reader --- //
+			topic = participant.create_topic("CPTS464 Schauls: T0", typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
+					null /* listener */, StatusKind.STATUS_MASK_NONE);
+			if (topic == null) {
+				System.err.println("create_topic error\n");
+				return;
+			}
 
-            listener = new AccidentListener();
+			topic1 = participant.create_topic("CPTS464 Schauls: T1", typeName1, DomainParticipant.TOPIC_QOS_DEFAULT,
+					null /* listener */, StatusKind.STATUS_MASK_NONE);
+			if (topic1 == null) {
+				System.err.println("create_topic error\n");
+				return;
+			}
 
-            /* To customize data reader QoS, use
-            the configuration file USER_QOS_PROFILES.xml */
+			// --- Create reader --- //
 
-            reader = (AccidentDataReader)
-            subscriber.create_datareader(
-                topic, Subscriber.DATAREADER_QOS_DEFAULT, listener,
-                StatusKind.STATUS_MASK_ALL);
-            if (reader == null) {
-                System.err.println("create_datareader error\n");
-                return;
-            }                         
+			listener = new AccidentListener();
 
-            // --- Wait for data --- //
+			/*
+			 * To customize data reader QoS, use the configuration file
+			 * USER_QOS_PROFILES.xml
+			 */
 
-            final long receivePeriodSec = 4;
+			reader = (AccidentDataReader) subscriber.create_datareader(topic, Subscriber.DATAREADER_QOS_DEFAULT,
+					listener, StatusKind.STATUS_MASK_ALL);
+			if (reader == null) {
+				System.err.println("create_datareader error\n");
+				return;
+			}
 
-            for (int count = 0;
-            (sampleCount == 0) || (count < sampleCount);
-            ++count) {
-                System.out.println("Accident subscriber sleeping for "
-                + receivePeriodSec + " sec...");
+			reader1 = (PositionDataReader) subscriber.create_datareader(topic1, Subscriber.DATAREADER_QOS_DEFAULT,
+					listener, StatusKind.STATUS_MASK_ALL);
+			if (reader1 == null) {
+				System.err.println("create_datareader error\n");
+				return;
+			}
 
-                try {
-                    Thread.sleep(receivePeriodSec * 1000);  // in millisec
-                } catch (InterruptedException ix) {
-                    System.err.println("INTERRUPTED");
-                    break;
-                }
-            }
-        } finally {
+			// --- Wait for data --- //
 
-            // --- Shutdown --- //
+			final long receivePeriodSec = 4;
 
-            if(participant != null) {
-                participant.delete_contained_entities();
+			for (int count = 0; (sampleCount == 0) || (count < sampleCount); ++count) {
 
-                DomainParticipantFactory.TheParticipantFactory.
-                delete_participant(participant);
-            }
-            /* RTI Data Distribution Service provides the finalize_instance()
-            method for users who want to release memory used by the
-            participant factory singleton. Uncomment the following block of
-            code for clean destruction of the participant factory
-            singleton. */
-            //DomainParticipantFactory.finalize_instance();
-        }
-    }
+				try {
+					Thread.sleep(receivePeriodSec * 1000); // in millisec
+				} catch (InterruptedException ix) {
+					System.err.println("INTERRUPTED");
+					break;
+				}
+			}
+		} finally {
 
-    // -----------------------------------------------------------------------
-    // Private Types
-    // -----------------------------------------------------------------------
+			// --- Shutdown --- //
 
-    // =======================================================================
+			if (participant != null) {
+				participant.delete_contained_entities();
 
-    private static class AccidentListener extends DataReaderAdapter {
+				DomainParticipantFactory.TheParticipantFactory.delete_participant(participant);
+			}
+			/*
+			 * RTI Data Distribution Service provides the finalize_instance() method for
+			 * users who want to release memory used by the participant factory singleton.
+			 * Uncomment the following block of code for clean destruction of the
+			 * participant factory singleton.
+			 */
+			// DomainParticipantFactory.finalize_instance();
+		}
+	}
 
-        AccidentSeq _dataSeq = new AccidentSeq();
-        SampleInfoSeq _infoSeq = new SampleInfoSeq();
+	// -----------------------------------------------------------------------
+	// Private Types
+	// -----------------------------------------------------------------------
 
-        public void on_data_available(DataReader reader) {
-            AccidentDataReader AccidentReader =
-            (AccidentDataReader)reader;
+	// =======================================================================
 
-            try {
-                AccidentReader.take(
-                    _dataSeq, _infoSeq,
-                    ResourceLimitsQosPolicy.LENGTH_UNLIMITED,
-                    SampleStateKind.ANY_SAMPLE_STATE,
-                    ViewStateKind.ANY_VIEW_STATE,
-                    InstanceStateKind.ANY_INSTANCE_STATE);
+	private static class AccidentListener extends DataReaderAdapter {
 
-                for(int i = 0; i < _dataSeq.size(); ++i) {
-                    SampleInfo info = (SampleInfo)_infoSeq.get(i);
+		AccidentSeq _dataSeq = new AccidentSeq();
+		SampleInfoSeq _infoSeq = new SampleInfoSeq();
+		PositionSeq pdata = new PositionSeq();
+		int flag = 0;
 
-                    if (info.valid_data) {
-                        System.out.println(
-                            ((Accident)_dataSeq.get(i)).toString("Received",0));
+		public void on_data_available(DataReader reader) {
+			AccidentDataReader AccidentReader = null;
+			PositionDataReader Position_reader = null;
+			if (reader.getClass() == PositionDataReader.class) {
+				System.out.println("ITS POSITION");
+				try {
+					Position_reader = (PositionDataReader) reader;
+					Position_reader.take(pdata, _infoSeq, ResourceLimitsQosPolicy.LENGTH_UNLIMITED,
+							SampleStateKind.ANY_SAMPLE_STATE, ViewStateKind.ANY_VIEW_STATE,
+							InstanceStateKind.ANY_INSTANCE_STATE);
 
-                    }
-                }
-            } catch (RETCODE_NO_DATA noData) {
-                // No data to process
-            } finally {
-                AccidentReader.return_loan(_dataSeq, _infoSeq);
-            }
-        }
-    }
+					for (int i = 0; i < pdata.size(); ++i) {
+						SampleInfo info = (SampleInfo) _infoSeq.get(i);
+
+						if (info.valid_data) {
+							Position p = pdata.get(i);
+							System.out
+									.println(MessageFormat.format("Position\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+											p.route, p.vehicle, p.trafficConditions, p.stopNumber, p.numStops,
+											p.timeBetweenStops, p.fillInRatio, p.timestamp));
+							flag = 1;
+
+						}
+					}
+				} catch (RETCODE_NO_DATA noData) {
+					// No data to process
+					System.out.println("Error");
+				}
+			} else {
+				System.out.println("ITS ACCIDENT");
+				AccidentReader = (AccidentDataReader) reader;
+
+				try {
+					AccidentReader.take(_dataSeq, _infoSeq, ResourceLimitsQosPolicy.LENGTH_UNLIMITED,
+							SampleStateKind.ANY_SAMPLE_STATE, ViewStateKind.ANY_VIEW_STATE,
+							InstanceStateKind.ANY_INSTANCE_STATE);
+
+					for (int i = 0; i < _dataSeq.size(); ++i) {
+						SampleInfo info = (SampleInfo) _infoSeq.get(i);
+
+						if (info.valid_data) {
+
+							Accident p = _dataSeq.get(i);
+							System.out
+									.println(MessageFormat.format("Accident\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+											p.route, p.vehicle, "", p.stopNumber, "", "", "", p.timestamp));
+							flag = 0;
+
+						}
+					}
+				} catch (RETCODE_NO_DATA noData) {
+					// No data to process
+				}
+			}
+
+			if (flag == 1) {
+				Position_reader.return_loan(pdata, _infoSeq);
+			} else {
+				AccidentReader.return_loan(_dataSeq, _infoSeq);
+			}
+		}
+	}
 }
-
