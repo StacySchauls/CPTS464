@@ -71,6 +71,8 @@
 		</java>
 	</target>
 	
+
+	
 	<!-- Run release publisher -->
 	<target name="AccidentPublisher" depends="compile">
 		<java fork="true" failonerror="yes" classpathref="build.classpath.release" classpath="AccidentExample.jar" classname="AccidentPublisher">
@@ -79,6 +81,24 @@
 			<arg value="0" description="Max loop count"/>
 		</java>
 	</target>
+	
+	<!-- Run release Passenger1 -->
+	<target name="Passenger1" depends="compile">
+		<java fork="true" failonerror="yes" classpathref="build.classpath.release" classpath="AccidentExample.jar" classname="Passenger1">
+			<env key="LD_LIBRARY_PATH" path="${env.LD_LIBRARY_PATH};${env.NDDSHOME}/lib/x64Linux3gcc5.4.0"/>
+			<arg value="0" description="Domain"/>
+			<arg value="0" description="Max loop count"/>
+		</java>
+	</target>
+				
+	<!-- Run release Passenger2 -->
+	<target name="Passenger2" depends="compile">
+		<java fork="true" failonerror="yes" classpathref="build.classpath.release" classpath="AccidentExample.jar" classname="Passenger2">
+			<env key="LD_LIBRARY_PATH" path="${env.LD_LIBRARY_PATH};${env.NDDSHOME}/lib/x64Linux3gcc5.4.0"/>
+			<arg value="0" description="Domain"/>
+			<arg value="0" description="Max loop count"/>
+		</java>
+	</target>				
 	
 	<!-- Run debug subscriber -->
 	<target name="AccidentSubscriber-debug" depends="compile-debug">
@@ -97,5 +117,23 @@
 			<arg value="0" description="Max loop count"/>
 		</java>
 	</target>
+	
+	
+	<!-- Run debug passenger1 -->
+		<target name="Passenger1-debug" depends="compile-debug">
+			<java fork="true" failonerror="yes" classpathref="build.classpath.debug" classpath="AccidentExample-debug.jar" classname="Passenger1">
+				<env key="LD_LIBRARY_PATH" path="${env.LD_LIBRARY_PATH};${env.NDDSHOME}/lib/x64Linux3gcc5.4.0"/>
+				<arg value="0" description="Domain"/>
+				<arg value="0" description="Max loop count"/>
+			</java>
+		</target>
+	<!-- Run debug passenger2 -->
+		<target name="Passenger2-debug" depends="compile-debug">
+			<java fork="true" failonerror="yes" classpathref="build.classpath.debug" classpath="AccidentExample-debug.jar" classname="Passenger2">
+				<env key="LD_LIBRARY_PATH" path="${env.LD_LIBRARY_PATH};${env.NDDSHOME}/lib/x64Linux3gcc5.4.0"/>
+				<arg value="0" description="Domain"/>
+				<arg value="0" description="Max loop count"/>
+			</java>
+		</target>
 	
 </project>

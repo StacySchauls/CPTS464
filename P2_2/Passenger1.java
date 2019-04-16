@@ -50,6 +50,7 @@ java -Djava.ext.dirs=$NDDSHOME/class AccidentSubscriber <domain_id>
 */
 
 import java.net.InetAddress;
+
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -62,12 +63,24 @@ import com.rti.ndds.config.*;
 
 // ===========================================================================
 
-public class AccidentSubscriber {
+public class Passenger1 {
+	public static String targetBus;
+	public static String targetRoute;
+	public static String targetStop;
+	public static int myCurrentStop;
+	public static int myTargetStop;
+	public static String myCurrentRoute;
+	public static String myCurrentBus;
+	public static Boolean onBus;
 	// -----------------------------------------------------------------------
 	// Public Methods
 	// -----------------------------------------------------------------------
 
 	public static void main(String[] args) {
+		myCurrentStop = 2;
+		myCurrentRoute = "Express1";
+		myTargetStop = 4;
+		onBus = false;
 		// --- Get domain ID --- //
 		int domainId = 0;
 		if (args.length >= 1) {
@@ -97,8 +110,9 @@ public class AccidentSubscriber {
 
 	// --- Constructors: -----------------------------------------------------
 
-	private AccidentSubscriber() {
+	private Passenger1() {
 		super();
+
 	}
 
 	// -----------------------------------------------------------------------
@@ -112,6 +126,8 @@ public class AccidentSubscriber {
 		DataReaderListener listener = null;
 		AccidentDataReader reader = null;
 		PositionDataReader reader1 = null;
+		
+		
 
 		try {
 
@@ -121,6 +137,8 @@ public class AccidentSubscriber {
 			 * To customize participant QoS, use the configuration file
 			 * USER_QOS_PROFILES.xml
 			 */
+			
+		
 
 			participant = DomainParticipantFactory.TheParticipantFactory.create_participant(domainId,
 					DomainParticipantFactory.PARTICIPANT_QOS_DEFAULT, null /* listener */, StatusKind.STATUS_MASK_NONE);
@@ -155,6 +173,8 @@ public class AccidentSubscriber {
 			 * To customize topic QoS, use the configuration file USER_QOS_PROFILES.xml
 			 */
 
+			//cftPos = participant.create_contentfilteredtopic_with_filter("contentFilteredTopicPos",  topic, "name MATCH 'bus23'", params, DomainParticipant.STRINGMATCHFILTER_NAME);
+
 			topic = participant.create_topic("CPTS464 Schauls: T0", typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
 					null /* listener */, StatusKind.STATUS_MASK_NONE);
 			if (topic == null) {
@@ -172,12 +192,7 @@ public class AccidentSubscriber {
 			// --- Create reader --- //
 
 			listener = new AccidentListener();
-
-			/*
-			 * To customize data reader QoS, use the configuration file
-			 * USER_QOS_PROFILES.xml
-			 */
-
+			
 			reader = (AccidentDataReader) subscriber.create_datareader(topic, Subscriber.DATAREADER_QOS_DEFAULT,
 					listener, StatusKind.STATUS_MASK_ALL);
 			if (reader == null) {
@@ -193,7 +208,7 @@ public class AccidentSubscriber {
 			}
 
 			// --- Wait for data --- //
-			System.out.println("Type\t\tRoute Name\tBusName\tTraffic\tStop#\t#Stops\tTime\tFill%\tTimeStamp");
+			//System.out.println("Type\t\tRoute Name\tBusName\tTraffic\tStop#\t#Stops\tTime\tFill%\tTimeStamp");
 
 			final long receivePeriodSec = 4;
 
@@ -236,7 +251,7 @@ public class AccidentSubscriber {
 		AccidentSeq _dataSeq = new AccidentSeq();
 		SampleInfoSeq _infoSeq = new SampleInfoSeq();
 		PositionSeq pdata = new PositionSeq();
-		int flag = 0;
+		int flag = 2; // 0 == accident, 1 == position, 2 == Error, netier
 
 		public void on_data_available(DataReader reader) {
 			AccidentDataReader AccidentReader = null;
@@ -255,11 +270,29 @@ public class AccidentSubscriber {
 
 						if (info.valid_data) {
 							Position p = pdata.get(i);
-							System.out
-									.println(MessageFormat.format("Position\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
-											p.route, p.vehicle, p.trafficConditions, p.stopNumber, p.numStops,
-											p.timeBetweenStops, p.fillInRatio, p.timestamp));
-							flag = 1;
+							
+						/*	
+							//Check the route for my route im subbed to
+							if(p.route.equalsIgnoreCase(myCurrentRoute)) {
+								System.out.println("From Route "+myCurrentRoute);
+								System.out
+								.println(MessageFormat.format("\tPosition\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+										p.route, p.vehicle, p.trafficConditions, p.stopNumber, p.numStops,
+										p.timeBetweenStops, p.fillInRatio, p.timestamp));
+									flag = 1;
+							}
+							
+							//check the stop for my stop im subbed to
+							if(p.stopNumber == myCurrentStop) {
+								System.out.println("From Stop "+myCurrentRoute);
+								System.out
+								.println(MessageFormat.format("\tPosition\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+										p.route, p.vehicle, p.trafficConditions, p.stopNumber, p.numStops,
+										p.timeBetweenStops, p.fillInRatio, p.timestamp));
+									flag = 1;
+							}
+							*/
+							
 
 						}
 					}
@@ -282,11 +315,28 @@ public class AccidentSubscriber {
 						if (info.valid_data) {
 
 							Accident p = _dataSeq.get(i);
-							System.out
-									.println(MessageFormat.format("Accident\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
-											p.route, p.vehicle, "", p.stopNumber, "", "", "", p.timestamp));
-							flag = 0;
+							
+							/*
+							if(p.route.equalsIgnoreCase(myCurrentRoute)) {
+								System.out.println("From Route "+myCurrentRoute);
+								System.out
+								.println(MessageFormat.format("FROMPASS1\tAccident\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+										p.route, p.vehicle, "", p.stopNumber, "", "", "", p.timestamp));
+						flag = 0;
+							}
+							
+							//check the stop for my stop im subbed to
+							if(p.stopNumber == myCurrentStop) {
+								System.out.println("From Stop "+myCurrentRoute);
+								System.out
+								.println(MessageFormat.format("FROMPASS1\tAccident\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+										p.route, p.vehicle, "", p.stopNumber, "", "", "", p.timestamp));
+						flag = 0;
+							}
+							
 
+						*/
+						
 						}
 					}
 				} catch (RETCODE_NO_DATA noData) {
@@ -296,8 +346,10 @@ public class AccidentSubscriber {
 
 			if (flag == 1) {
 				Position_reader.return_loan(pdata, _infoSeq);
-			} else {
+			} else if (flag == 0) {
 				AccidentReader.return_loan(_dataSeq, _infoSeq);
+			}else {
+				
 			}
 		}
 	}

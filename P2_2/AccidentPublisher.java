@@ -222,6 +222,7 @@ public class AccidentPublisher implements Runnable{
     	this.sampleCount = sample;
     	this.passedRoute = passedR;
     	this.passedBus = passedB;
+    	
     	System.out.println("Passed in routeInname as "+passedR.name);
         
     }
@@ -234,7 +235,8 @@ public class AccidentPublisher implements Runnable{
 
         DomainParticipant participant = null;
         Publisher publisher = null;
-        Topic topic = null, topic1 = null;
+        Topic topic = null, topic1 = null, busTopic = null;
+        
         AccidentDataWriter writer = null;
         PositionDataWriter writer1 = null;
         
@@ -282,7 +284,9 @@ public class AccidentPublisher implements Runnable{
 
             /* To customize topic QoS, use
             the configuration file USER_QOS_PROFILES.xml */
-
+            
+            
+            // POSITION TOPIC
             topic = participant.create_topic(
                 "CPTS464 Schauls: T0",
                 typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
@@ -292,6 +296,7 @@ public class AccidentPublisher implements Runnable{
                 return;
             }      
             
+            // ACCIDENT TOPIC
             topic1 = participant.create_topic(
                     "CPTS464 Schauls: T1",
                     typeName1, DomainParticipant.TOPIC_QOS_DEFAULT,
@@ -300,6 +305,8 @@ public class AccidentPublisher implements Runnable{
                     System.err.println("create_topic error\n");
                     return;
                 }   
+            
+ 
 
             // --- Create writer --- //
 

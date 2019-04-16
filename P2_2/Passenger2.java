@@ -1,4 +1,5 @@
 
+
 /* AccidentSubscriber.java
 
 A publication of data of type Accident
@@ -62,12 +63,25 @@ import com.rti.ndds.config.*;
 
 // ===========================================================================
 
-public class AccidentSubscriber {
+public class Passenger2 {
 	// -----------------------------------------------------------------------
 	// Public Methods
 	// -----------------------------------------------------------------------
-
+	public static String targetBus;
+	public static String targetRoute;
+	public static String targetStop;
+	public static int myCurrentStop;
+	public static int myTargetStop;
+	public static String myCurrentRoute;
+	public static String myCurrentBus;
+	public static Boolean onBus;
+	// --------------------------
 	public static void main(String[] args) {
+		
+		myCurrentStop = 3;
+		myCurrentRoute = "Express2";
+		myTargetStop = 2;
+		onBus = false;
 		// --- Get domain ID --- //
 		int domainId = 0;
 		if (args.length >= 1) {
@@ -97,7 +111,7 @@ public class AccidentSubscriber {
 
 	// --- Constructors: -----------------------------------------------------
 
-	private AccidentSubscriber() {
+	private Passenger2() {
 		super();
 	}
 
@@ -121,6 +135,8 @@ public class AccidentSubscriber {
 			 * To customize participant QoS, use the configuration file
 			 * USER_QOS_PROFILES.xml
 			 */
+			
+		
 
 			participant = DomainParticipantFactory.TheParticipantFactory.create_participant(domainId,
 					DomainParticipantFactory.PARTICIPANT_QOS_DEFAULT, null /* listener */, StatusKind.STATUS_MASK_NONE);
@@ -255,10 +271,17 @@ public class AccidentSubscriber {
 
 						if (info.valid_data) {
 							Position p = pdata.get(i);
-							System.out
-									.println(MessageFormat.format("Position\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
-											p.route, p.vehicle, p.trafficConditions, p.stopNumber, p.numStops,
-											p.timeBetweenStops, p.fillInRatio, p.timestamp));
+							
+							if(p.stopNumber == myCurrentStop) {
+								System.out.println("At my stop: "+myCurrentStop);
+								System.out
+								.println(MessageFormat.format("FROMPASS1\tPosition\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+										p.route, p.vehicle, p.trafficConditions, p.stopNumber, p.numStops,
+										p.timeBetweenStops, p.fillInRatio, p.timestamp));
+							}
+							
+							
+							
 							flag = 1;
 
 						}
@@ -282,9 +305,15 @@ public class AccidentSubscriber {
 						if (info.valid_data) {
 
 							Accident p = _dataSeq.get(i);
-							System.out
-									.println(MessageFormat.format("Accident\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
-											p.route, p.vehicle, "", p.stopNumber, "", "", "", p.timestamp));
+							
+							if(p.stopNumber == myCurrentStop) {
+								System.out.println("At my stop: "+myCurrentStop);
+								System.out
+								.println(MessageFormat.format("FROMPASS1\tAccident\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+										p.route, p.vehicle, "", p.stopNumber, "", "", "", p.timestamp));
+							}
+							
+							
 							flag = 0;
 
 						}

@@ -15,3 +15,7 @@
 /PositionTypeSupport.class
 /Route.class
 /Bus.class
+/Passenger1.class
+/Passenger1$AccidentListener.class
+/Passenger2.class
+/Passenger2$AccidentListener.class

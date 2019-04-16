@@ -50,3 +50,7 @@ AccidentPublisher: ./AccidentPublisher.class
  
 AccidentSubscriber: ./AccidentSubscriber.class
 	$(JAVA_PATH) -d64 -classpath ".:$(RTI_CLASSPATH)" AccidentSubscriber $(ARGS)
+
+	
+Passenger1: ./Passenger1.class
+	$(JAVA_PATH) -d64 -classpath ".:$(RTI_CLASSPATH)" Passenger1 $(ARGS)	
