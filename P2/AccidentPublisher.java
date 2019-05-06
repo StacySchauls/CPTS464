@@ -102,7 +102,7 @@ public class AccidentPublisher implements Runnable{
 		String pairs[];
 		// get num routes, num vehicle, num backup
 		//nt numRoutes = 0;
-		//int numVehicles = 0;
+		//int numVehicles = 0idomainId, sampleCount;
 		int numBackup = 0;
 		int count = 0;
 		
@@ -142,27 +142,27 @@ public class AccidentPublisher implements Runnable{
 		
 		//create the vehicles. Need to know which vehicles go with which route. maybe use the name? idk
 		Vehicle bus11 = create_bus(routes[0], "bus11", 4);
-		//Vehicle bus12 = create_bus(routes[0], "bus12", 4);
+		Vehicle bus12 = create_bus(routes[0], "bus12", 4);
 
 		
-		//Vehicle bus21 = create_bus(routes[1], "bus21", 2);
-		//Vehicle bus22 = create_bus(routes[1], "bus22", 2);
+		Vehicle bus21 = create_bus(routes[1], "bus21", 2);
+		Vehicle bus22 = create_bus(routes[1], "bus22", 2);
 		
 		//add the busses to the bus array
 		busses[0] = bus11;
-		//busses[1] = bus12;
-		//busses[2] = bus21;
-		//busses[3] = bus22;
+		busses[1] = bus12;
+		busses[2] = bus21;
+		busses[3] = bus22;
 
 		Thread threads[] = new Thread[numVehicles * numRoutes];
 		//for each vehicle on each route, start a pub thread
 		int i;
-		for(i = 0; i<1; i++) {
+		for(i = 0; i<numVehicles * numRoutes; i++) {
 			System.out.println("Creating thread "+ i);
 			threads[i] = new Thread(new AccidentPublisher(i,0,busses[i]));
 		}
 		
-		for(i = 0; i<1; i++) {
+		for(i = 0; i<numVehicles * numRoutes; i++) {
 			System.out.println("Starting thread " + i);
 			threads[i].start();
 		}
@@ -355,7 +355,11 @@ public class AccidentPublisher implements Runnable{
         DomainParticipant participant = null;
         Publisher publisher = null;
         Topic topic = null;
+        Topic busTopic = null;
+        Topic stopTopic = null;
         AccidentDataWriter writer = null;
+        AccidentDataWriter busWriter = null;
+        AccidentDataWriter stopWriter = null;
         Publisher vehicles[] = new Publisher[numVehicles];
         
         try {
@@ -396,10 +400,27 @@ public class AccidentPublisher implements Runnable{
             /* To customize topic QoS, use
             the configuration file USER_QOS_PROFILES.xml */
             System.out.println("topic is " + bus.name);
+            
+            //Need to change topics/add topics?
+            
+            
+            
             topic = participant.create_topic(
-                bus.name,
+                bus.route,
                 typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
+            
+            stopTopic = participant.create_topic(
+                    Integer.toString(bus.stopCount),
+                    typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
+                    null /* listener */, StatusKind.STATUS_MASK_NONE);
+            
+            busTopic = participant.create_topic(
+                    bus.name,
+                    typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
+                    null /* listener */, StatusKind.STATUS_MASK_NONE);
+            
+            
             if (topic == null) {
                 System.err.println("create_topic error\n");
                 return;
@@ -409,11 +430,26 @@ public class AccidentPublisher implements Runnable{
 
             /* To customize data writer QoS, use
             the configuration file USER_QOS_PROFILES.xml */
-
+            
+            //make a writer for each topic
+            
+            
             writer = (AccidentDataWriter)
             publisher.create_datawriter(
                 topic, Publisher.DATAWRITER_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
+            
+            busWriter = (AccidentDataWriter)
+                    publisher.create_datawriter(
+                        busTopic, Publisher.DATAWRITER_QOS_DEFAULT,
+                        null /* listener */, StatusKind.STATUS_MASK_NONE);
+            
+            stopWriter = (AccidentDataWriter)
+                    publisher.create_datawriter(
+                        stopTopic, Publisher.DATAWRITER_QOS_DEFAULT,
+                        null /* listener */, StatusKind.STATUS_MASK_NONE);
+
+            
             if (writer == null) {
                 System.err.println("create_datawriter error\n");
                 return;
@@ -423,6 +459,8 @@ public class AccidentPublisher implements Runnable{
 
             /* Create data sample for writing */
             Accident instance = new Accident();
+            Accident routeInstance = new Accident();
+            Accident stopInstance = new Accident();
             
             
             
@@ -446,7 +484,7 @@ public class AccidentPublisher implements Runnable{
             /* TODO: FIX THE BREAK OUT OF THIS FOR LOOP FR THE BUS STOP COUNT AND SHIT */
             for (int count = 0;(sampleCount == 0) || (count < sampleCount); ++count ) {
             	
-            	//Check for accident
+
             
             	
             	//checks the count to know when to break out of the loop
@@ -474,6 +512,8 @@ public class AccidentPublisher implements Runnable{
                  	instance.route = bus.route;
              		instance.vehicle = bus.name;
              		instance.stopNumber = bus.stopCount;
+             		
+             		stopInstance.stopNumber = bus.stopCount;
             		 bus.stopCount++;
             		 start = System.nanoTime();
             		 
@@ -482,8 +522,18 @@ public class AccidentPublisher implements Runnable{
                     	bus.TimeBewteen += 10;
                     }
             		 Position pos = reached_stop(bus, bus.stopCount);
+            		 
+            		 //display the position
             		 displayPos(pos, bus);
-            		 writer.write(instance, instance_handle);
+            		 instance.timestamp = pos.timestamp;
+            		 
+            		 // write all the writers
+            		 
+            		 //writer.write(instance, instance_handle);
+            		 //instance.message = "sent from bus "+bus.name;
+            		// busWriter.write(instance, instance_handle);
+            		 //instance.message = "sent from stop " + bus.stopCount;
+            		 stopWriter.write(stopInstance, instance_handle);
             	}
                
 

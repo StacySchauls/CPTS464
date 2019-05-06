@@ -1,5 +1,4 @@
 
-
 /* AccidentSubscriber.java
 
 A publication of data of type Accident
@@ -63,26 +62,12 @@ import com.rti.ndds.config.*;
 
 // ===========================================================================
 
-public class Passenger2 {
+public class AccidentSubscriber {
 	// -----------------------------------------------------------------------
 	// Public Methods
 	// -----------------------------------------------------------------------
-	public static String targetBus;
-	public static String targetRoute;
-	public static String targetStop;
-	public static int myCurrentStop;
-	public static int myTargetStop;
-	public static String myCurrentRoute;
-	public static String myCurrentBus;
-	public static Boolean onBus;
-	public static Boolean arrived;
-	// --------------------------
+
 	public static void main(String[] args) {
-		
-		myCurrentStop = 3;
-		myCurrentRoute = "Express2 ";
-		myTargetStop = 2;
-		onBus = arrived = false;
 		// --- Get domain ID --- //
 		int domainId = 0;
 		if (args.length >= 1) {
@@ -112,7 +97,7 @@ public class Passenger2 {
 
 	// --- Constructors: -----------------------------------------------------
 
-	private Passenger2() {
+	private AccidentSubscriber() {
 		super();
 	}
 
@@ -136,8 +121,6 @@ public class Passenger2 {
 			 * To customize participant QoS, use the configuration file
 			 * USER_QOS_PROFILES.xml
 			 */
-			
-		
 
 			participant = DomainParticipantFactory.TheParticipantFactory.create_participant(domainId,
 					DomainParticipantFactory.PARTICIPANT_QOS_DEFAULT, null /* listener */, StatusKind.STATUS_MASK_NONE);
@@ -210,7 +193,7 @@ public class Passenger2 {
 			}
 
 			// --- Wait for data --- //
-			System.out.println("I am passenger 2. I am waiting for the bus...");
+			System.out.println("Type\t\tRoute Name\tBusName\tTraffic\tStop#\t#Stops\tTime\tFill%\tTimeStamp");
 
 			final long receivePeriodSec = 4;
 
@@ -256,7 +239,6 @@ public class Passenger2 {
 		int flag = 0;
 
 		public void on_data_available(DataReader reader) {
-			flag = 0;
 			AccidentDataReader AccidentReader = null;
 			PositionDataReader Position_reader = null;
 			if (reader.getClass() == PositionDataReader.class) {
@@ -273,45 +255,10 @@ public class Passenger2 {
 
 						if (info.valid_data) {
 							Position p = pdata.get(i);
-							
-							
-
-								if(onBus == false) {
-									
-									if(p.stopNumber == myCurrentStop && p.route.equalsIgnoreCase(myCurrentRoute)) {
-										System.out.println("Bus " + p.vehicle +" is at my stop!: "+myCurrentStop);
-										System.out.println("Getting on the bus.");
-										myCurrentBus = p.vehicle;
-										onBus = true;
-										System.out
-										.println(MessageFormat.format("\tPosition\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
-												p.route, p.vehicle, p.trafficConditions, p.stopNumber, p.numStops,
-												p.timeBetweenStops, p.fillInRatio, p.timestamp));
-									}
-									
-									//System.out.println(p.route.length());
-									//System.out.println(myCurrentRoute.length());
-									
-									if(p.route.equals(myCurrentRoute) && onBus == false) {
-										System.out.println("from route "+p.route+"That im subbed to.");
-										System.out
-										.println(MessageFormat.format("\tPosition\tRoute {0}\tBus {1}\tTraffic {2}\tStop#: {3}\t#Stops {4}\tTimeBTW {5}\tFill% {6}\tTimeStamp {7}\t",
-												p.route, p.vehicle, p.trafficConditions, p.stopNumber, p.numStops,
-												p.timeBetweenStops, p.fillInRatio, p.timestamp));
-									}
-								}else {
-									if(p.vehicle.equalsIgnoreCase(myCurrentBus)){
-										System.out.println(MessageFormat.format("Bus {0} Ariving at stop {1}. Time: {2}. Stops left: {3}", p.vehicle, p.stopNumber, p.timestamp, p.stopNumber % myTargetStop));
-									}
-									
-									System.out.println("stop is: "+p.stopNumber);
-									System.out.println("my target is "+ myTargetStop);
-									if(p.stopNumber == myTargetStop) {
-										System.out.println("Arrived at my destination, via bus "+p.vehicle+" at "+p.timestamp);
-										System.exit(0);
-									}
-								}
-
+							System.out
+									.println(MessageFormat.format("Position\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+											p.route, p.vehicle, p.trafficConditions, p.stopNumber, p.numStops,
+											p.timeBetweenStops, p.fillInRatio, p.timestamp));
 							flag = 1;
 
 						}
@@ -335,47 +282,9 @@ public class Passenger2 {
 						if (info.valid_data) {
 
 							Accident p = _dataSeq.get(i);
-							
-							if(arrived == false) {
-								if(onBus == false) {
-									
-									if(p.stopNumber == myCurrentStop && p.route.equalsIgnoreCase(myCurrentRoute)) {
-										System.out.println("Bus " + p.vehicle +" is at my stop!: "+myCurrentStop);
-										System.out.println("Getting on the bus.");
-										myCurrentBus = p.vehicle;
-										onBus = true;
-										System.out
-										.println(MessageFormat.format("Accident\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
-												p.route, p.vehicle, p.stopNumber, p.timestamp, "",
-												"", "", ""));
-									}
-									
-									//System.out.println(p.route.length());
-									//System.out.println(myCurrentRoute.length());
-									
-									if(p.route.equals(myCurrentRoute) && onBus == false) {
-										System.out.println("from route "+p.route+"That im subbed to.");
-										System.out
-										.println(MessageFormat.format("Accident\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
-												p.route, p.vehicle, p.stopNumber, p.timestamp, "",
-												"", "", ""));
-									}
-								}else {
-									if(p.vehicle.equalsIgnoreCase(myCurrentBus)){
-										System.out.println(MessageFormat.format("Bus {0} Ariving at stop {1}. Time: {2}. Stops left: {3}", p.vehicle, p.stopNumber, p.timestamp, p.stopNumber % myTargetStop));
-									}
-									
-									//System.out.println("stop is: "+p.stopNumber);
-									//System.out.println("my target is "+ myTargetStop);
-									if(p.stopNumber == myTargetStop) {
-										System.out.println("Arrived at my destination, via bus "+p.vehicle+" at "+p.timestamp);
-										arrived = true;
-										System.exit(0);
-									}
-								}
-							}
-							
-							
+							System.out
+									.println(MessageFormat.format("Accident\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+											p.route, p.vehicle, "", p.stopNumber, "", "", "", p.timestamp));
 							flag = 0;
 
 						}

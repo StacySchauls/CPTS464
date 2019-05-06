@@ -141,7 +141,6 @@ public class AccidentPublisher implements Runnable{
 				if(matcher.find()) {
 					System.out.println("Adding new route "+value.split("#")[0]);
 					routes.add(new Route(value.split("#")[0]));
-					
 					continue;
 				}
 				if(prop.contains("numStops")) {
@@ -357,12 +356,11 @@ public class AccidentPublisher implements Runnable{
             (sampleCount == 0) || (count < sampleCount);
             ++count) {
             	
-            	System.out.println("Count: "+count+ " numumStops "+routeIn.numStops);
+            	//System.out.println("Count: "+count+ " numumStops "+routeIn.numStops);
             	if(count % routeIn.numStops == 0) passes++;
             	if(passes>3) break;
             	
-            	
-                System.out.println("Writing Accident, count " + count);
+            
                 
                 int traffic = random.nextInt(101);
                 if(traffic <= 25)//light 25%
@@ -395,7 +393,7 @@ public class AccidentPublisher implements Runnable{
                 
                 
                 posIn.timestamp = formatter.format(new Date());
-                System.out.println("name is "+routeIn.name);
+                //System.out.println("name is "+routeIn.name+"test");
                 posIn.route = routeIn.name;
                 posIn.vehicle = busIn.id;
                 posIn.stopNumber = busIn.stop;
@@ -405,6 +403,8 @@ public class AccidentPublisher implements Runnable{
                 //detect accident
                 int acc = random.nextInt(101);
                 if(acc <= 10) {
+                	System.out.println("Writing Acciedent for bus "+ posIn.vehicle);
+                	
                 	accident_writer.write(instance, instance_handle);
                    
                     posIn.timeBetweenStops += 10;
@@ -414,6 +414,7 @@ public class AccidentPublisher implements Runnable{
                 busIn.stop = (busIn.stop % routeIn.numStops + 1); //mod so we wrap around. goes back to 0
                 
                 position_writer.write_untyped(posIn, instance_handle);
+                System.out.println("Writing Position for bus "+ posIn.vehicle);
 
                 //Go nighty night thread
                 try {

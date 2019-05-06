@@ -151,7 +151,7 @@ public class AccidentTypeSupport extends TypeSupportImpl {
         currentAlignment +=CdrPrimitiveType.getStringMaxSizeSerialized(currentAlignment, (255)+1);
         currentAlignment +=CdrPrimitiveType.getStringMaxSizeSerialized(currentAlignment, (255)+1);
         currentAlignment +=CdrPrimitiveType.getStringMaxSizeSerialized(currentAlignment, (255)+1);
-        currentAlignment += CdrPrimitiveType.INT.getMaxSizeSerialized(currentAlignment) ;
+        currentAlignment += CdrPrimitiveType.INT.getMaxSizeSerialized(currentAlignment);
         if (include_encapsulation) {
             currentAlignment += encapsulation_size;
         }

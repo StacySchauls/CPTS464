@@ -73,42 +73,10 @@ public class AccidentSubscriber implements Runnable{
 	public static int numRoutes;
 	public static int numVehicles;
 	public static Passenger pasengers[];
- 	public static void parsePub() throws IOException {
+	private Passenger pass;
+	private Operator op;
+	private Object op_pass;
 
-
-		File file = new File("pub.properties");
-		Scanner scanner = new Scanner(file);
-		BufferedReader br = new BufferedReader(new FileReader(file));
-		String st;
-		String pairs[];
-		// get num routes, num vehicle, num backup
-		//nt numRoutes = 0;
-		//int numVehicles = 0;
-		int numBackup = 0;
-		int count = 0;
-		
-		while((st=br.readLine()) != null) {
-			if(st.charAt(0) == '#') {
-				System.out.println("we should ignore this line : " + st);
-			}else {
-				pairs = st.split("=");
-				System.out.println(pairs[1]);
-				System.out.println(st);
-				if(count == 0) {
-					numRoutes = Integer.parseInt(pairs[1]);
-					
-				}else if(count == 1) {
-					numVehicles = Integer.parseInt(pairs[1]);				
-				}else if (count == 2) {
-					
-				}
-			}
-			count ++;
-			
-		}
-		System.out.println("Routes = " + numRoutes);
-		System.out.println("Vehicles = " + numVehicles);
-	}
 	
  	
  	public static Passenger create_pass(int num) {
@@ -117,11 +85,13 @@ public class AccidentSubscriber implements Runnable{
  		
  		//diff for passenger 1 and 2
  		if(num == 1) {
+ 			
  			pass.currentRoute = 1;
  			pass.currentStop = 2;
  			pass.destination = 4;
  			pass.subRoute = 1;
  			pass.subStopNum = 2;
+ 			pass.myNum = 1;
  			
  		}else if(num == 2) {
  			pass.currentRoute = 2;
@@ -129,6 +99,7 @@ public class AccidentSubscriber implements Runnable{
  			pass.destination = 2;
  			pass.subRoute = 2;
  			pass.subStopNum = 3;
+ 			pass.myNum = 2;
  		}else {
  			System.out.println("Error. Invalid passenger number");
  			return null;
@@ -165,8 +136,15 @@ public class AccidentSubscriber implements Runnable{
         */
 
         // --- Run --- //
-        new Thread(new AccidentSubscriber(0,0, "bus11")).start();
-        new Thread(new AccidentSubscriber(1,0, "bus12")).start();
+        Passenger pass1 = create_pass(1);
+		Passenger pass2 = create_pass(2);
+		Operator op = create_op();
+        
+        
+        
+        new Thread(new AccidentSubscriber(0,0, "bus13", pass1)).start();
+        new Thread(new AccidentSubscriber(1,0, "bus12",pass2)).start();
+        new Thread(new AccidentSubscriber(2,0,"bus11",op)).start();
        // subscriberMain(domainId, sampleCount);
         
     }
@@ -177,23 +155,45 @@ public class AccidentSubscriber implements Runnable{
 
     // --- Constructors: -----------------------------------------------------
 
-    private AccidentSubscriber(int domainId, int SampleCount, String busName) {
+    private AccidentSubscriber(int domainId, int SampleCount, String busName, Object obj) {
         super();
+        
         this.domainID = domainId;
         this.sampleCount = SampleCount;
         this.busName = busName;
+        this.op_pass = obj;
+        
+                
     }
 
     // -----------------------------------------------------------------------
 
-    private static void subscriberMain(int domainId, int sampleCount, String busName) {
-
+    private static void subscriberMain(int domainId, int sampleCount, String busName, Object obj) {
+    	Passenger pas = null;
         DomainParticipant participant = null;
         Subscriber subscriber = null;
-        Topic topic = null;
+        Topic topic, stopTopic, routeTopic;
         DataReaderListener listener = null;
+        DataReaderListener listener1 = null;
+        DataReaderListener listener2 = null;
         AccidentDataReader reader = null;
+        AccidentDataReader stopReader = null;
+        AccidentDataReader busReader = null;
+        int flag = 0;
         
+        Operator op = new Operator();
+        if(obj.getClass() != op.getClass()) {
+        	
+        	System.out.println("Not the same class. i.e obj is a passenger. Looking at bus "+busName);
+        	flag = 0;
+        	pas = (Passenger)obj;
+        	
+        }else {
+        	System.out.println("obj is an operator");
+        	flag = 1;
+        	
+        }
+
         
 
         try {
@@ -235,10 +235,14 @@ public class AccidentSubscriber implements Runnable{
             /* To customize topic QoS, use
             the configuration file USER_QOS_PROFILES.xml */
             System.out.println("Subbing to topic " + busName);
+            
             topic = participant.create_topic(
                 busName,
                 typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
+            
+            
+            
             if (topic == null) {
                 System.err.println("create_topic error\n");
                 return;
@@ -247,18 +251,48 @@ public class AccidentSubscriber implements Runnable{
             // --- Create reader --- //
 
             listener = new AccidentListener();
-
+            listener1 = new AccidentListener();
+            listener2 = new AccidentListener();
             /* To customize data reader QoS, use
             the configuration file USER_QOS_PROFILES.xml */
 
-            reader = (AccidentDataReader)
-            subscriber.create_datareader(
-                topic, Subscriber.DATAREADER_QOS_DEFAULT, listener,
-                StatusKind.STATUS_MASK_ALL);
-            if (reader == null) {
-                System.err.println("create_datareader error\n");
-                return;
-            }                         
+            //is passenger
+            if(flag == 0) {
+            	if(pas.myNum == 1) {
+            		
+            		System.out.println("Creating topic for stop 2");
+            		stopTopic = participant.create_topic(
+                            "2",
+                            typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
+                            null /* listener */, StatusKind.STATUS_MASK_NONE);
+            		System.out.println("Creating topic for route Express1");
+                    routeTopic = participant.create_topic(
+                            "Express1",
+                            typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
+                            null /* listener */, StatusKind.STATUS_MASK_NONE);
+            		
+                    
+                    
+                	reader = (AccidentDataReader)
+                            subscriber.create_datareader(
+                                routeTopic, Subscriber.DATAREADER_QOS_DEFAULT, listener,
+                                StatusKind.STATUS_MASK_ALL);
+                            if (reader == null) {
+                                System.err.println("create_datareader error\n");
+                                return;
+                            }  
+                            
+                    stopReader = (AccidentDataReader)
+                            subscriber.create_datareader(
+                                stopTopic, Subscriber.DATAREADER_QOS_DEFAULT, listener1,
+                                StatusKind.STATUS_MASK_ALL);  
+            	}
+            }else {
+            	//is an op. Subs to all.
+            	
+            }
+            
+                                   
 
             // --- Wait for data --- //
 
@@ -323,9 +357,9 @@ public class AccidentSubscriber implements Runnable{
                     SampleInfo info = (SampleInfo)_infoSeq.get(i);
 
                     if (info.valid_data) {
-                    	System.out.println("here");
-                        System.out.println("Messaged Received "+_dataSeq.get(i));
-
+                    	
+                        System.out.println("Passenger Received "+_dataSeq.get(i));
+                        
                     }
                 }
             } catch (RETCODE_NO_DATA noData) {
@@ -339,7 +373,7 @@ public class AccidentSubscriber implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		subscriberMain(this.domainID, this.sampleCount, this.busName);
+		subscriberMain(this.domainID, this.sampleCount, this.busName, this.op_pass);
 	}
 }
 

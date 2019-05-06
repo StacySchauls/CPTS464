@@ -6,4 +6,5 @@ public class Passenger{
 	int currentRoute;
 	int currentStop;
 	int destination;
+	int myNum;
 }
